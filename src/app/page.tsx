@@ -5,6 +5,8 @@ import { AgentId, AgentSnapshot, AgentEvent } from '@/lib/types'
 import { AgentCard } from '@/components/agent-card'
 import { ActivityFeed } from '@/components/activity-feed'
 import { SummaryBar } from '@/components/summary-bar'
+import { LoginForm } from '@/components/login-form'
+import { useAuth } from '@/components/auth-provider'
 
 interface DashboardData {
   agents: Record<string, AgentSnapshot>
@@ -17,6 +19,7 @@ interface DashboardData {
 }
 
 export default function Home() {
+  const { user, loading: authLoading, signOut } = useAuth()
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
   const [lastSnapshot, setLastSnapshot] = useState<string | null>(null)
@@ -48,12 +51,27 @@ export default function Home() {
     return () => clearInterval(interval)
   }, [fetchData])
 
-  if (loading) {
+  if (authLoading || (!user && loading)) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
           <p className="text-zinc-500 text-sm">Carregando Mission Control...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!user) {
+    return <LoginForm />
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+          <p className="text-zinc-500 text-sm">Carregando dados...</p>
         </div>
       </div>
     )
@@ -72,9 +90,20 @@ export default function Home() {
             <p className="text-zinc-500 text-sm">Monitoramento do time de agentes</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
-          <span className="text-xs text-zinc-500">Live</span>
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-xs text-zinc-500">Live</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-zinc-500">{user?.email}</span>
+            <button
+              onClick={signOut}
+              className="text-xs text-zinc-500 hover:text-white bg-zinc-800 px-2.5 py-1.5 rounded-lg transition-colors"
+            >
+              Sair
+            </button>
+          </div>
         </div>
       </div>
 
