@@ -14,7 +14,7 @@ export function SummaryBar({ totalCost, totalTokens, agentCount, lastUpdated }: 
     { label: 'Agentes', value: agentCount.toString(), icon: '🤖' },
     { label: 'Tokens Total', value: formatTokens(totalTokens), icon: '📊' },
     { label: 'Custo Total', value: formatCost(totalCost), icon: '💰' },
-    { label: 'Atualizado', value: lastUpdated ? new Date(lastUpdated).toLocaleTimeString('pt-BR') : '—', icon: '🕐' },
+    { label: 'Atualizado', value: lastUpdated ? new Date(lastUpdated).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '—', icon: '🕐' },
   ]
 
   return (

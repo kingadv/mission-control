@@ -19,7 +19,7 @@ interface DashboardData {
 export default function Home() {
   const [data, setData] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [lastFetch, setLastFetch] = useState<string | null>(null)
+  const [lastSnapshot, setLastSnapshot] = useState<string | null>(null)
 
   const fetchData = useCallback(async () => {
     try {
@@ -27,7 +27,13 @@ export default function Home() {
       if (res.ok) {
         const json = await res.json()
         setData(json)
-        setLastFetch(new Date().toISOString())
+        // Find the most recent snapshot time from agents
+        const snapshotTimes = Object.values(json.agents || {})
+          .map((a: any) => a.snapshotAt)
+          .filter(Boolean)
+          .sort()
+          .reverse()
+        setLastSnapshot(snapshotTimes[0] || null)
       }
     } catch (e) {
       console.error('Failed to fetch:', e)
@@ -78,7 +84,7 @@ export default function Home() {
           totalCost={data?.summary.totalCost || 0}
           totalTokens={data?.summary.totalTokens || 0}
           agentCount={data?.summary.agentCount || 0}
-          lastUpdated={lastFetch}
+          lastUpdated={lastSnapshot}
         />
       </div>
 

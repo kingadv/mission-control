@@ -47,6 +47,11 @@ export function AgentCard({ agent, snapshot }: AgentCardProps) {
           <div className="bg-zinc-900/50 rounded-lg p-3">
             <p className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Última msg</p>
             <p className="text-xs font-mono">{snapshot.lastMessageAt ? timeAgo(snapshot.lastMessageAt) : '—'}</p>
+            {snapshot.lastMessageAt && (
+              <p className="text-[9px] text-zinc-600 font-mono mt-0.5">
+                {new Date(snapshot.lastMessageAt).toLocaleTimeString('pt-BR', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit' })}
+              </p>
+            )}
           </div>
         </div>
       ) : (
