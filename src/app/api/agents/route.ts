@@ -112,6 +112,21 @@ export async function GET(req: NextRequest) {
     tokensUsed: e.tokens_used || 0,
   }))
 
+  // Get comms
+  const { data: commsData } = await db
+    .from('agent_comms')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(30)
+
+  const comms = (commsData || []).map(c => ({
+    id: c.id,
+    from: c.from_agent,
+    to: c.to_agent,
+    message: c.message,
+    createdAt: c.created_at,
+  }))
+
   // Summary with context stats
   const agentEntries = Object.values(snapshots)
   const contextPcts = agentEntries.map((s: any) => ({ agent: s.agent, pct: s.contextPercent }))
@@ -121,6 +136,7 @@ export async function GET(req: NextRequest) {
     agents: snapshots,
     events: formattedEvents,
     tasks,
+    comms,
     summary: {
       totalTokens: agentEntries.reduce((a: number, s: any) => a + (s.totalTokens || 0), 0),
       agentCount: agentEntries.length,

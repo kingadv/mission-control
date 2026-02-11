@@ -6,6 +6,8 @@ import { AgentCard } from '@/components/agent-card'
 import { ActivityFeed } from '@/components/activity-feed'
 import { SummaryBar } from '@/components/summary-bar'
 import { TasksPanel } from '@/components/tasks-panel'
+import { CommsFeed, AgentComm } from '@/components/comms-feed'
+import { SessionTimeline, TimelineEntry } from '@/components/session-timeline'
 import { LoginForm } from '@/components/login-form'
 import { useAuth } from '@/components/auth-provider'
 
@@ -13,6 +15,7 @@ interface DashboardData {
   agents: Record<string, AgentSnapshot>
   events: AgentEvent[]
   tasks: AgentTask[]
+  comms: AgentComm[]
   summary: {
     totalTokens: number
     agentCount: number
@@ -53,6 +56,24 @@ export default function Home() {
     const interval = setInterval(fetchData, 30000)
     return () => clearInterval(interval)
   }, [fetchData])
+
+  const handleKill = async (agent: AgentId, reason: string) => {
+    try {
+      const { supabaseBrowser } = await import('@/lib/supabase-browser')
+      const { data: { session: s } } = await supabaseBrowser.auth.getSession()
+      await fetch('/api/agents/kill', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(s?.access_token ? { 'Authorization': `Bearer ${s.access_token}` } : {}),
+        },
+        body: JSON.stringify({ agent, reason }),
+      })
+      fetchData()
+    } catch (e) {
+      console.error('Kill failed:', e)
+    }
+  }
 
   if (authLoading || (!user && loading)) {
     return (
@@ -129,12 +150,26 @@ export default function Home() {
             key={agent}
             agent={agent}
             snapshot={data?.agents[agent] || null}
+            onKill={handleKill}
           />
         ))}
       </div>
 
-      {/* Tasks + Activity Feed side by side */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {/* Comms Feed */}
+      <div className="mb-6">
+        <CommsFeed comms={data?.comms || []} />
+      </div>
+
+      {/* Timeline + Tasks + Activity Feed */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <SessionTimeline entries={(data?.events || []).map(e => ({
+          id: e.id,
+          agent: e.agent,
+          eventType: e.eventType,
+          summary: e.summary,
+          tokensUsed: e.tokensUsed,
+          createdAt: e.createdAt,
+        }))} />
         <TasksPanel tasks={data?.tasks || []} />
         <ActivityFeed events={data?.events || []} />
       </div>
