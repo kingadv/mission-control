@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { AgentId, AgentSnapshot, AgentEvent, AgentTask } from '@/lib/types'
 import { AgentCard } from '@/components/agent-card'
 import { ActivityFeed } from '@/components/activity-feed'
@@ -11,51 +11,96 @@ import { SessionTimeline, TimelineEntry } from '@/components/session-timeline'
 import { LoginForm } from '@/components/login-form'
 import { useAuth } from '@/components/auth-provider'
 
-interface DashboardData {
+interface StatusData {
   agents: Record<string, AgentSnapshot>
-  events: AgentEvent[]
-  tasks: AgentTask[]
-  comms: AgentComm[]
   summary: {
     totalTokens: number
     agentCount: number
-    avgContext: number
     maxContextAgent: string | null
     maxContextPct: number
   }
+  fetchedAt: string
+}
+
+interface DashboardData {
+  events: AgentEvent[]
+  tasks: AgentTask[]
+  comms: AgentComm[]
 }
 
 export default function Home() {
   const { user, loading: authLoading, signOut } = useAuth()
-  const [data, setData] = useState<DashboardData | null>(null)
+  const [status, setStatus] = useState<StatusData | null>(null)
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null)
   const [loading, setLoading] = useState(true)
-  const [lastSnapshot, setLastSnapshot] = useState<string | null>(null)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
 
-  const fetchData = useCallback(async () => {
+  // Fetch live agent status
+  const fetchStatus = useCallback(async () => {
     try {
-      const res = await fetch('/api/agents')
+      const res = await fetch('/api/agents/status')
       if (res.ok) {
         const json = await res.json()
-        setData(json)
-        const snapshotTimes = Object.values(json.agents || {})
-          .map((a: any) => a.snapshotAt)
-          .filter(Boolean)
-          .sort()
-          .reverse()
-        setLastSnapshot(snapshotTimes[0] || null)
+        setStatus(json)
       }
     } catch (e) {
-      console.error('Failed to fetch:', e)
+      console.error('Status fetch failed:', e)
     } finally {
       setLoading(false)
     }
   }, [])
 
+  // Fetch dashboard data (events, tasks, comms) — less frequent
+  const fetchDashboard = useCallback(async () => {
+    try {
+      const res = await fetch('/api/agents')
+      if (res.ok) {
+        const json = await res.json()
+        setDashboard({ events: json.events, tasks: json.tasks, comms: json.comms })
+      }
+    } catch (e) {
+      console.error('Dashboard fetch failed:', e)
+    }
+  }, [])
+
+  // Polling with visibility awareness
   useEffect(() => {
-    fetchData()
-    const interval = setInterval(fetchData, 30000)
-    return () => clearInterval(interval)
-  }, [fetchData])
+    fetchStatus()
+    fetchDashboard()
+
+    const startPolling = () => {
+      if (intervalRef.current) clearInterval(intervalRef.current)
+      intervalRef.current = setInterval(() => {
+        fetchStatus()
+        // Fetch dashboard data every 2 minutes (less frequent)
+        if (Date.now() % 120000 < 30000) fetchDashboard()
+      }, 30000)
+    }
+
+    const stopPolling = () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+    }
+
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') {
+        fetchStatus() // immediate refresh on tab focus
+        startPolling()
+      } else {
+        stopPolling()
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibility)
+    startPolling()
+
+    return () => {
+      stopPolling()
+      document.removeEventListener('visibilitychange', handleVisibility)
+    }
+  }, [fetchStatus, fetchDashboard])
 
   const handleKill = async (agent: AgentId, reason: string) => {
     try {
@@ -69,13 +114,13 @@ export default function Home() {
         },
         body: JSON.stringify({ agent, reason }),
       })
-      fetchData()
+      fetchStatus()
     } catch (e) {
       console.error('Kill failed:', e)
     }
   }
 
-  if (authLoading || (!user && loading)) {
+  if (authLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
@@ -134,12 +179,12 @@ export default function Home() {
       {/* Summary */}
       <div className="mb-6">
         <SummaryBar
-          totalTokens={data?.summary.totalTokens || 0}
-          agentCount={data?.summary.agentCount || 0}
-          avgContext={data?.summary.avgContext || 0}
-          maxContextAgent={data?.summary.maxContextAgent || null}
-          maxContextPct={data?.summary.maxContextPct || 0}
-          lastUpdated={lastSnapshot}
+          totalTokens={status?.summary.totalTokens || 0}
+          agentCount={status?.summary.agentCount || 0}
+          avgContext={0}
+          maxContextAgent={status?.summary.maxContextAgent || null}
+          maxContextPct={status?.summary.maxContextPct || 0}
+          lastUpdated={status?.fetchedAt || null}
         />
       </div>
 
@@ -149,7 +194,7 @@ export default function Home() {
           <AgentCard
             key={agent}
             agent={agent}
-            snapshot={data?.agents[agent] || null}
+            snapshot={status?.agents[agent] || null}
             onKill={handleKill}
           />
         ))}
@@ -157,12 +202,12 @@ export default function Home() {
 
       {/* Comms Feed */}
       <div className="mb-6">
-        <CommsFeed comms={data?.comms || []} />
+        <CommsFeed comms={dashboard?.comms || []} />
       </div>
 
       {/* Timeline + Tasks + Activity Feed */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <SessionTimeline entries={(data?.events || []).map(e => ({
+        <SessionTimeline entries={(dashboard?.events || []).map(e => ({
           id: e.id,
           agent: e.agent,
           eventType: e.eventType,
@@ -170,8 +215,8 @@ export default function Home() {
           tokensUsed: e.tokensUsed,
           createdAt: e.createdAt,
         }))} />
-        <TasksPanel tasks={data?.tasks || []} />
-        <ActivityFeed events={data?.events || []} />
+        <TasksPanel tasks={dashboard?.tasks || []} />
+        <ActivityFeed events={dashboard?.events || []} />
       </div>
     </main>
   )
