@@ -1,7 +1,7 @@
 'use client'
 
 import { AgentEvent, AGENTS, AgentId } from '@/lib/types'
-import { formatTokens, formatCost, timeAgo } from '@/lib/format'
+import { formatTokens, timeAgo } from '@/lib/format'
 
 interface ActivityFeedProps {
   events: AgentEvent[]
@@ -54,9 +54,7 @@ export function ActivityFeed({ events }: ActivityFeedProps) {
                   {event.tokensUsed > 0 && (
                     <span className="text-[10px] text-zinc-500">{formatTokens(event.tokensUsed)} tok</span>
                   )}
-                  {event.cost > 0 && (
-                    <span className="text-[10px] text-zinc-500">{formatCost(event.cost)}</span>
-                  )}
+{/* cost removed - Max plan */}
                 </div>
                 {event.summary && (
                   <p className="text-xs text-zinc-400 mt-0.5 truncate">{event.summary}</p>

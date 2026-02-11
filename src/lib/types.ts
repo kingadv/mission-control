@@ -1,5 +1,6 @@
 export type AgentId = 'noah' | 'kai' | 'dora'
 export type AgentStatus = 'online' | 'working' | 'idle' | 'offline'
+export type TaskStatus = 'running' | 'completed' | 'error'
 
 export interface AgentInfo {
   id: AgentId
@@ -23,10 +24,21 @@ export interface AgentSnapshot {
   model: string | null
   totalTokens: number
   contextTokens: number
-  costTotal: number
+  contextPercent: number
   lastMessageAt: string | null
   lastChannel: string | null
+  currentTask: string | null
   snapshotAt: string
+}
+
+export interface AgentTask {
+  id: string
+  agent: AgentId
+  summary: string
+  status: TaskStatus
+  startedAt: string
+  completedAt: string | null
+  tokensUsed: number
 }
 
 export interface AgentEvent {
@@ -45,6 +57,7 @@ export interface SessionData {
   agent: AgentId
   model: string
   totalTokens: number
+  contextTokens: number
   updatedAt: number
   lastChannel: string
   lastMessage?: string

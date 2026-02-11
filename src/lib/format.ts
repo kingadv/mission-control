@@ -4,8 +4,8 @@ export function formatTokens(n: number): string {
   return n.toString()
 }
 
-export function formatCost(n: number): string {
-  return `$${n.toFixed(4)}`
+export function formatPercent(n: number): string {
+  return `${n.toFixed(1)}%`
 }
 
 export function timeAgo(date: string | number): string {
@@ -39,4 +39,16 @@ export function statusDot(s: string): string {
     case 'offline': return 'bg-red-400'
     default: return 'bg-zinc-500'
   }
+}
+
+export function contextColor(percent: number): string {
+  if (percent >= 80) return 'text-red-400'
+  if (percent >= 60) return 'text-amber-400'
+  return 'text-green-400'
+}
+
+export function contextBarColor(percent: number): string {
+  if (percent >= 80) return 'bg-red-500'
+  if (percent >= 60) return 'bg-amber-500'
+  return 'bg-green-500'
 }

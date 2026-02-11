@@ -15,7 +15,7 @@ function checkAuth(req: NextRequest) {
   return null
 }
 
-// POST /api/agents — receives snapshot data from OpenClaw cron and stores it
+// POST /api/agents — receives snapshot data and stores it
 export async function POST(req: NextRequest) {
   const auth = checkAuth(req)
   if (auth) return auth
@@ -31,22 +31,22 @@ export async function POST(req: NextRequest) {
       model: agent.model,
       total_tokens: agent.totalTokens,
       context_tokens: agent.contextTokens,
-      cost_total: agent.costTotal,
       last_message_at: agent.lastMessageAt,
       last_channel: agent.lastChannel,
+      current_task: agent.currentTask || null,
     })
   }
 
   return NextResponse.json({ ok: true, count: agents.length })
 }
 
-// GET /api/agents — returns latest snapshot for each agent + recent events
+// GET /api/agents — latest snapshot + events + tasks
 export async function GET(req: NextRequest) {
   const db = supabaseAdmin()
 
   // Get latest snapshot per agent
   const snapshots: Record<string, any> = {}
-  for (const [agent, sessionKey] of Object.entries(AGENT_SESSION_MAP)) {
+  for (const [agent] of Object.entries(AGENT_SESSION_MAP)) {
     const { data } = await db
       .from('agent_snapshots')
       .select('*')
@@ -54,18 +54,23 @@ export async function GET(req: NextRequest) {
       .order('snapshot_at', { ascending: false })
       .limit(1)
       .single()
-    
+
     if (data) {
+      const totalTokens = data.total_tokens || 0
+      const contextTokens = data.context_tokens || 1000000
+      const contextPercent = contextTokens > 0 ? (totalTokens / contextTokens) * 100 : 0
+
       snapshots[agent] = {
         agent: data.agent,
         sessionKey: data.session_key,
         status: data.status,
         model: data.model,
-        totalTokens: data.total_tokens,
-        contextTokens: data.context_tokens,
-        costTotal: parseFloat(data.cost_total),
+        totalTokens,
+        contextTokens,
+        contextPercent: Math.round(contextPercent * 10) / 10,
         lastMessageAt: data.last_message_at,
         lastChannel: data.last_channel,
+        currentTask: data.current_task,
         snapshotAt: data.snapshot_at,
       }
     }
@@ -89,27 +94,41 @@ export async function GET(req: NextRequest) {
     createdAt: e.created_at,
   }))
 
-  // Aggregate stats
-  const { data: totalCosts } = await db
-    .from('agent_snapshots')
-    .select('agent, cost_total')
-    .order('snapshot_at', { ascending: false })
+  // Get tasks (from agent_events with type task_*)
+  const { data: taskEvents } = await db
+    .from('agent_events')
+    .select('*')
+    .in('event_type', ['task_start', 'task_complete', 'task_error', 'snapshot'])
+    .order('created_at', { ascending: false })
+    .limit(30)
 
-  // Get per-agent latest cost
-  const costByAgent: Record<string, number> = {}
-  for (const row of (totalCosts || [])) {
-    if (!costByAgent[row.agent]) {
-      costByAgent[row.agent] = parseFloat(row.cost_total)
-    }
-  }
+  const tasks = (taskEvents || []).map(e => ({
+    id: e.id,
+    agent: e.agent,
+    summary: e.summary || 'Task sem descrição',
+    status: e.event_type === 'task_start' ? 'running' : e.event_type === 'task_error' ? 'error' : 'completed',
+    startedAt: e.created_at,
+    completedAt: e.event_type !== 'task_start' ? e.created_at : null,
+    tokensUsed: e.tokens_used || 0,
+  }))
+
+  // Summary with context stats
+  const agentEntries = Object.values(snapshots)
+  const contextPcts = agentEntries.map((s: any) => ({ agent: s.agent, pct: s.contextPercent }))
+  const maxCtx = contextPcts.reduce((max, c) => c.pct > max.pct ? c : max, { agent: null, pct: 0 })
 
   return NextResponse.json({
     agents: snapshots,
     events: formattedEvents,
+    tasks,
     summary: {
-      totalCost: Object.values(costByAgent).reduce((a, b) => a + b, 0),
-      totalTokens: Object.values(snapshots).reduce((a: number, s: any) => a + (s.totalTokens || 0), 0),
-      agentCount: Object.keys(snapshots).length,
+      totalTokens: agentEntries.reduce((a: number, s: any) => a + (s.totalTokens || 0), 0),
+      agentCount: agentEntries.length,
+      avgContext: agentEntries.length > 0
+        ? Math.round(contextPcts.reduce((a, c) => a + c.pct, 0) / contextPcts.length * 10) / 10
+        : 0,
+      maxContextAgent: maxCtx.agent,
+      maxContextPct: maxCtx.pct,
     },
   })
 }

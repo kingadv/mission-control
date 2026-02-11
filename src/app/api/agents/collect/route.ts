@@ -9,59 +9,68 @@ function checkAuth(req: NextRequest) {
   return null
 }
 
-const OPENCLAW_URL = process.env.OPENCLAW_GATEWAY_URL || 'http://localhost:3100'
-const OPENCLAW_TOKEN = process.env.OPENCLAW_GATEWAY_TOKEN || ''
-
 const AGENT_MAP: Record<string, string> = {
   'agent:main:main': 'noah',
   'agent:kai:main': 'kai',
   'agent:researcher:main': 'dora',
 }
 
-// POST /api/agents/collect — self-contained collection from OpenClaw APIs
-// Called by cron or manually. Fetches sessions_list and stores snapshots.
+// POST /api/agents/collect — receives raw session data from cron
 export async function POST(req: NextRequest) {
   const auth = checkAuth(req)
   if (auth) return auth
 
-  // This endpoint receives pre-collected data from the cron agent
-  // since we can't call OpenClaw APIs from Vercel
   const body = await req.json()
   const { sessions } = body
-  
+
   if (!sessions || !Array.isArray(sessions)) {
     return NextResponse.json({ error: 'sessions array required' }, { status: 400 })
   }
 
   const db = supabaseAdmin()
-  const now = new Date()
-  const tenMinAgo = now.getTime() - 10 * 60 * 1000
+  const now = Date.now()
+  const tenMinAgo = now - 10 * 60 * 1000
   const results = []
+  const alerts = []
 
   for (const session of sessions) {
     const agent = AGENT_MAP[session.key]
     if (!agent) continue
 
-    const updatedAt = session.updatedAt // epoch ms
+    const updatedAt = session.updatedAt
     const isRecent = updatedAt > tenMinAgo
     const status = isRecent ? (session.abortedLastRun === false ? 'working' : 'online') : 'idle'
     const lastMessageAt = updatedAt ? new Date(updatedAt).toISOString() : null
+    const totalTokens = session.totalTokens || 0
+    const contextTokens = session.contextTokens || 1000000
+    const contextPercent = contextTokens > 0 ? (totalTokens / contextTokens) * 100 : 0
 
     const snapshot = {
       agent,
       session_key: session.key,
       status,
       model: session.model || null,
-      total_tokens: session.totalTokens || 0,
-      context_tokens: session.contextTokens || 0,
-      cost_total: session.cost || 0,
+      total_tokens: totalTokens,
+      context_tokens: contextTokens,
       last_message_at: lastMessageAt,
       last_channel: session.lastChannel || null,
+      current_task: session.currentTask || null,
     }
 
     const { error } = await db.from('agent_snapshots').insert(snapshot)
-    if (!error) results.push({ agent, status })
+    if (!error) results.push({ agent, status, contextPercent: Math.round(contextPercent * 10) / 10 })
+
+    // Context alert at 80%
+    if (contextPercent >= 80) {
+      alerts.push({ agent, contextPercent: Math.round(contextPercent * 10) / 10 })
+      await db.from('agent_events').insert({
+        agent,
+        event_type: 'context_alert',
+        summary: `⚠️ ${agent} chegou a ${Math.round(contextPercent)}% do contexto (${totalTokens}/${contextTokens} tokens)`,
+        tokens_used: totalTokens,
+      })
+    }
   }
 
-  return NextResponse.json({ ok: true, collected: results })
+  return NextResponse.json({ ok: true, collected: results, alerts })
 }

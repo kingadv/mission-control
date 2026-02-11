@@ -1,20 +1,24 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { AgentId, AgentSnapshot, AgentEvent } from '@/lib/types'
+import { AgentId, AgentSnapshot, AgentEvent, AgentTask } from '@/lib/types'
 import { AgentCard } from '@/components/agent-card'
 import { ActivityFeed } from '@/components/activity-feed'
 import { SummaryBar } from '@/components/summary-bar'
+import { TasksPanel } from '@/components/tasks-panel'
 import { LoginForm } from '@/components/login-form'
 import { useAuth } from '@/components/auth-provider'
 
 interface DashboardData {
   agents: Record<string, AgentSnapshot>
   events: AgentEvent[]
+  tasks: AgentTask[]
   summary: {
-    totalCost: number
     totalTokens: number
     agentCount: number
+    avgContext: number
+    maxContextAgent: string | null
+    maxContextPct: number
   }
 }
 
@@ -30,7 +34,6 @@ export default function Home() {
       if (res.ok) {
         const json = await res.json()
         setData(json)
-        // Find the most recent snapshot time from agents
         const snapshotTimes = Object.values(json.agents || {})
           .map((a: any) => a.snapshotAt)
           .filter(Boolean)
@@ -47,7 +50,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchData()
-    const interval = setInterval(fetchData, 30000) // poll every 30s
+    const interval = setInterval(fetchData, 30000)
     return () => clearInterval(interval)
   }, [fetchData])
 
@@ -110,9 +113,11 @@ export default function Home() {
       {/* Summary */}
       <div className="mb-6">
         <SummaryBar
-          totalCost={data?.summary.totalCost || 0}
           totalTokens={data?.summary.totalTokens || 0}
           agentCount={data?.summary.agentCount || 0}
+          avgContext={data?.summary.avgContext || 0}
+          maxContextAgent={data?.summary.maxContextAgent || null}
+          maxContextPct={data?.summary.maxContextPct || 0}
           lastUpdated={lastSnapshot}
         />
       </div>
@@ -128,8 +133,11 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Activity Feed */}
-      <ActivityFeed events={data?.events || []} />
+      {/* Tasks + Activity Feed side by side */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TasksPanel tasks={data?.tasks || []} />
+        <ActivityFeed events={data?.events || []} />
+      </div>
     </main>
   )
 }
