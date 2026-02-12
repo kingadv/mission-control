@@ -5,7 +5,7 @@ const OPENCLAW_API_URL = 'https://api.scosta.io/sessions'
 const AGENT_MAP: Record<string, string> = {
   'agent:main:main': 'noah',
   'agent:kai:main': 'kai',
-  'agent:researcher:main': 'dora',
+  'agent:dora:main': 'dora',
 }
 
 // GET /api/agents/status — proxy to OpenClaw sessions API (token never exposed to client)
