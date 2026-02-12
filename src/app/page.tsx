@@ -1,13 +1,10 @@
 'use client'
 
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { AgentId, AgentSnapshot, AgentEvent, AgentTask } from '@/lib/types'
+import { AgentId, AgentSnapshot, AgentEvent } from '@/lib/types'
 import { AgentCard } from '@/components/agent-card'
-import { ActivityFeed } from '@/components/activity-feed'
 import { SummaryBar } from '@/components/summary-bar'
-import { TasksPanel } from '@/components/tasks-panel'
 import { CommsFeed, AgentComm } from '@/components/comms-feed'
-import { SessionTimeline, TimelineEntry } from '@/components/session-timeline'
 import { LoginForm } from '@/components/login-form'
 import { useAuth } from '@/components/auth-provider'
 
@@ -24,7 +21,6 @@ interface StatusData {
 
 interface DashboardData {
   events: AgentEvent[]
-  tasks: AgentTask[]
   comms: AgentComm[]
 }
 
@@ -56,7 +52,7 @@ export default function Home() {
       const res = await fetch('/api/agents')
       if (res.ok) {
         const json = await res.json()
-        setDashboard({ events: json.events, tasks: json.tasks, comms: json.comms })
+        setDashboard({ events: json.events, comms: json.comms })
       }
     } catch (e) {
       console.error('Dashboard fetch failed:', e)
@@ -203,20 +199,6 @@ export default function Home() {
       {/* Comms Feed */}
       <div className="mb-6">
         <CommsFeed comms={dashboard?.comms || []} />
-      </div>
-
-      {/* Timeline + Tasks + Activity Feed */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <SessionTimeline entries={(dashboard?.events || []).map(e => ({
-          id: e.id,
-          agent: e.agent,
-          eventType: e.eventType,
-          summary: e.summary,
-          tokensUsed: e.tokensUsed,
-          createdAt: e.createdAt,
-        }))} />
-        <TasksPanel tasks={dashboard?.tasks || []} />
-        <ActivityFeed events={dashboard?.events || []} />
       </div>
     </main>
   )
