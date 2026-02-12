@@ -33,13 +33,20 @@ const SIDES: Record<string, 'left' | 'right'> = {
 
 function CommBubble({ comm }: { comm: AgentComm }) {
   const [expanded, setExpanded] = useState(false)
-  const lineCount = comm.message.split('\n').length
-  const isLong = comm.message.length > MAX_CHARS || lineCount > MAX_LINES
+  const [isOverflowing, setIsOverflowing] = useState(false)
+  const contentRef = useRef<HTMLDivElement>(null)
   const agent = AGENTS[comm.from as AgentId]
   const toAgent = AGENTS[comm.to as AgentId]
   const colors = BUBBLE_COLORS[comm.from] || BUBBLE_COLORS.noah
   const side = SIDES[comm.from] || 'left'
   const isRight = side === 'right'
+
+  useEffect(() => {
+    const el = contentRef.current
+    if (el && !expanded) {
+      setIsOverflowing(el.scrollHeight > el.clientHeight + 2)
+    }
+  }, [comm.message, expanded])
 
   const time = new Date(comm.createdAt).toLocaleTimeString('pt-BR', {
     timeZone: 'America/Sao_Paulo',
@@ -78,8 +85,9 @@ function CommBubble({ comm }: { comm: AgentComm }) {
 
           <div className={`${colors.bg} border ${colors.border} rounded-2xl ${isRight ? 'rounded-br-sm' : 'rounded-bl-sm'} px-3 py-2`}>
             <div
+              ref={contentRef}
               className="overflow-hidden transition-[max-height] duration-300 ease-in-out"
-              style={{ maxHeight: expanded || !isLong ? '2000px' : '9em' }}
+              style={{ maxHeight: expanded ? '2000px' : '9em' }}
             >
               <div className="text-sm text-zinc-200 leading-snug prose prose-invert prose-sm max-w-none
                 prose-p:my-1 prose-headings:my-1 prose-headings:text-zinc-100
@@ -90,14 +98,21 @@ function CommBubble({ comm }: { comm: AgentComm }) {
                 <ReactMarkdown>{comm.message}</ReactMarkdown>
               </div>
             </div>
-            {isLong && (
+            {isOverflowing && !expanded ? (
               <button
                 onClick={() => setExpanded(!expanded)}
                 className="text-[11px] text-zinc-400 hover:text-zinc-200 mt-1 transition-colors"
               >
-                {expanded ? 'Ver menos ↑' : 'Ver mais ↓'}
+                Ver mais ↓
               </button>
-            )}
+            ) : expanded ? (
+              <button
+                onClick={() => setExpanded(false)}
+                className="text-[11px] text-zinc-400 hover:text-zinc-200 mt-1 transition-colors"
+              >
+                Ver menos ↑
+              </button>
+            ) : null}
           </div>
         </div>
 
