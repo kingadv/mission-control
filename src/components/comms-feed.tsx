@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { AGENTS, AgentId } from '@/lib/types'
 import { timeAgo } from '@/lib/format'
 
@@ -13,6 +14,32 @@ export interface AgentComm {
 
 interface CommsFeedProps {
   comms: AgentComm[]
+}
+
+const MAX_CHARS = 150
+
+function CommMessage({ message }: { message: string }) {
+  const [expanded, setExpanded] = useState(false)
+  const isLong = message.length > MAX_CHARS
+
+  return (
+    <div className="bg-zinc-800/70 rounded-lg px-3 py-2 border border-zinc-700/30">
+      <div
+        className="overflow-hidden transition-[max-height] duration-300 ease-in-out"
+        style={{ maxHeight: expanded || !isLong ? '2000px' : '3.2em' }}
+      >
+        <p className="text-sm text-zinc-300 whitespace-pre-wrap break-words">{message}</p>
+      </div>
+      {isLong && (
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="text-[11px] text-zinc-500 hover:text-zinc-300 mt-1 transition-colors"
+        >
+          {expanded ? 'Ver menos ↑' : 'Ver mais ↓'}
+        </button>
+      )}
+    </div>
+  )
 }
 
 export function CommsFeed({ comms }: CommsFeedProps) {
@@ -42,11 +69,9 @@ export function CommsFeed({ comms }: CommsFeedProps) {
           return (
             <div key={comm.id} className="group">
               <div className="flex items-start gap-3 py-2 px-3 rounded-lg hover:bg-zinc-800/50 transition-colors">
-                {/* Avatar */}
                 <span className="text-lg mt-0.5 shrink-0">{fromAgent?.emoji || '🤖'}</span>
 
                 <div className="flex-1 min-w-0">
-                  {/* From → To */}
                   <div className="flex items-center gap-1.5 mb-1">
                     <span className={`text-xs font-semibold ${fromAgent?.color || 'text-zinc-400'}`}>
                       {fromAgent?.name || comm.from}
@@ -60,12 +85,8 @@ export function CommsFeed({ comms }: CommsFeedProps) {
                     </span>
                   </div>
 
-                  {/* Message bubble */}
-                  <div className="bg-zinc-800/70 rounded-lg px-3 py-2 border border-zinc-700/30">
-                    <p className="text-sm text-zinc-300 whitespace-pre-wrap break-words">{comm.message}</p>
-                  </div>
+                  <CommMessage message={comm.message} />
 
-                  {/* Timestamp */}
                   <p className="text-[9px] text-zinc-600 mt-1 font-mono">
                     {new Date(comm.createdAt).toLocaleTimeString('pt-BR', {
                       timeZone: 'America/Sao_Paulo',
