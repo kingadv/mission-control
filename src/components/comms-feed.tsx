@@ -20,7 +20,7 @@ const MAX_CHARS = 150
 
 const BUBBLE_COLORS: Record<string, { bg: string; border: string; tail: string }> = {
   noah:  { bg: 'bg-purple-600/30', border: 'border-purple-500/40', tail: 'text-purple-500/40' },
-  kai:   { bg: 'bg-amber-600/25',  border: 'border-amber-500/40',  tail: 'text-amber-500/40' },
+  kai:   { bg: 'bg-cyan-600/25',   border: 'border-cyan-500/40',   tail: 'text-cyan-500/40' },
   dora:  { bg: 'bg-blue-600/25',   border: 'border-blue-500/40',   tail: 'text-blue-500/40' },
 }
 
@@ -53,7 +53,7 @@ function CommBubble({ comm }: { comm: AgentComm }) {
       </div>
 
       {/* Bubble */}
-      <div className={`max-w-[75%] min-w-[140px] ${isRight ? 'items-end' : 'items-start'} flex flex-col`}>
+      <div className={`max-w-[70%] min-w-[140px] ${isRight ? 'items-end' : 'items-start'} flex flex-col`}>
         {/* Name + recipient */}
         <div className={`flex items-center gap-1.5 mb-0.5 px-1 ${isRight ? 'flex-row-reverse' : ''}`}>
           <span className={`text-[11px] font-semibold ${agent?.color || 'text-zinc-400'}`}>
