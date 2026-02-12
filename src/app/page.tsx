@@ -5,6 +5,7 @@ import { AgentId, AgentSnapshot, AgentEvent } from '@/lib/types'
 import { AgentCard } from '@/components/agent-card'
 import { SummaryBar } from '@/components/summary-bar'
 import { CommsFeed, AgentComm } from '@/components/comms-feed'
+import { ActivityTimeline } from '@/components/activity-timeline'
 import { LoginForm } from '@/components/login-form'
 import { useAuth } from '@/components/auth-provider'
 
@@ -196,8 +197,9 @@ export default function Home() {
         ))}
       </div>
 
-      {/* Comms Feed */}
-      <div className="mb-6">
+      {/* Timeline + Comms side by side on desktop */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+        <ActivityTimeline />
         <CommsFeed comms={dashboard?.comms || []} />
       </div>
     </main>
