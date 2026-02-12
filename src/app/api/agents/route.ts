@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 const AGENT_SESSION_MAP: Record<string, string> = {
   noah: 'agent:main:main',
   kai: 'agent:kai:main',
-  dora: 'agent:researcher:main',
+  dora: 'agent:dora:main',
 }
 
 function checkAuth(req: NextRequest) {
