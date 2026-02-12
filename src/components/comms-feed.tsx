@@ -65,8 +65,8 @@ function CommBubble({ comm }: { comm: AgentComm }) {
 
       {/* Bubble */}
       <div className={`max-w-[70%] min-w-[140px] ${isRight ? 'items-end' : 'items-start'} flex flex-col`}>
-        {/* Name + recipient */}
-        <div className={`flex items-center gap-1.5 mb-0.5 px-1 ${isRight ? 'flex-row-reverse' : ''}`}>
+        {/* Sender → Recipient */}
+        <div className={`flex items-center gap-1.5 mb-0.5 px-1 ${isRight ? 'justify-end' : ''}`}>
           <span className={`text-[11px] font-semibold ${agent?.color || 'text-zinc-400'}`}>
             {agent?.name || comm.from}
           </span>

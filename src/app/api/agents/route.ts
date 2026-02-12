@@ -137,6 +137,7 @@ export async function GET(req: NextRequest) {
     events: formattedEvents,
     tasks,
     comms,
+    fetchedAt: new Date().toISOString(),
     summary: {
       totalTokens: agentEntries.reduce((a: number, s: any) => a + (s.totalTokens || 0), 0),
       agentCount: agentEntries.length,
