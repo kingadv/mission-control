@@ -33,8 +33,9 @@ const SIDES: Record<string, 'left' | 'right'> = {
 
 function CommBubble({ comm }: { comm: AgentComm }) {
   const [expanded, setExpanded] = useState(false)
-  const [isOverflowing, setIsOverflowing] = useState(false)
+  const [needsTruncation, setNeedsTruncation] = useState(false)
   const contentRef = useRef<HTMLDivElement>(null)
+  const measuredRef = useRef(false)
   const agent = AGENTS[comm.from as AgentId]
   const toAgent = AGENTS[comm.to as AgentId]
   const colors = BUBBLE_COLORS[comm.from] || BUBBLE_COLORS.noah
@@ -43,10 +44,11 @@ function CommBubble({ comm }: { comm: AgentComm }) {
 
   useEffect(() => {
     const el = contentRef.current
-    if (el && !expanded) {
-      setIsOverflowing(el.scrollHeight > el.clientHeight + 2)
+    if (el && !measuredRef.current) {
+      measuredRef.current = true
+      setNeedsTruncation(el.scrollHeight > el.clientHeight + 2)
     }
-  }, [comm.message, expanded])
+  }, [comm.message])
 
   const time = new Date(comm.createdAt).toLocaleTimeString('pt-BR', {
     timeZone: 'America/Sao_Paulo',
@@ -98,21 +100,14 @@ function CommBubble({ comm }: { comm: AgentComm }) {
                 <ReactMarkdown>{comm.message}</ReactMarkdown>
               </div>
             </div>
-            {isOverflowing && !expanded ? (
+            {needsTruncation && (
               <button
                 onClick={() => setExpanded(!expanded)}
                 className="text-[11px] text-zinc-400 hover:text-zinc-200 mt-1 transition-colors"
               >
-                Ver mais ↓
+                {expanded ? 'Ver menos ↑' : 'Ver mais ↓'}
               </button>
-            ) : expanded ? (
-              <button
-                onClick={() => setExpanded(false)}
-                className="text-[11px] text-zinc-400 hover:text-zinc-200 mt-1 transition-colors"
-              >
-                Ver menos ↑
-              </button>
-            ) : null}
+            )}
           </div>
         </div>
 
