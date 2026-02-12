@@ -115,7 +115,7 @@ export function CommsFeed({ comms }: CommsFeedProps) {
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = 0
+      scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }, [comms])
 
