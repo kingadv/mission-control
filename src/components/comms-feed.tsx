@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import ReactMarkdown from 'react-markdown'
 import { AGENTS, AgentId } from '@/lib/types'
 
 export interface AgentComm {
@@ -78,7 +79,14 @@ function CommBubble({ comm }: { comm: AgentComm }) {
               className="overflow-hidden transition-[max-height] duration-300 ease-in-out"
               style={{ maxHeight: expanded || !isLong ? '2000px' : '3.2em' }}
             >
-              <p className="text-sm text-zinc-200 whitespace-pre-wrap break-words leading-snug">{comm.message}</p>
+              <div className="text-sm text-zinc-200 leading-snug prose prose-invert prose-sm max-w-none
+                prose-p:my-1 prose-headings:my-1 prose-headings:text-zinc-100
+                prose-code:bg-zinc-900/60 prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-[13px] prose-code:before:content-none prose-code:after:content-none
+                prose-pre:bg-zinc-900/80 prose-pre:border prose-pre:border-zinc-700/40 prose-pre:rounded-lg prose-pre:my-1.5
+                prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline
+                prose-li:my-0 prose-ul:my-1 prose-ol:my-1">
+                <ReactMarkdown>{comm.message}</ReactMarkdown>
+              </div>
             </div>
             {isLong && (
               <button
