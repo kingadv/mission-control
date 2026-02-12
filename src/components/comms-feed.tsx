@@ -113,7 +113,7 @@ export function CommsFeed({ comms }: CommsFeedProps) {
 
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight
+      scrollRef.current.scrollTop = 0
     }
   }, [comms])
 
