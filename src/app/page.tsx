@@ -8,6 +8,7 @@ import { CommsFeed, AgentComm } from '@/components/comms-feed'
 import { ActivityTimeline } from '@/components/activity-timeline'
 import { LoginForm } from '@/components/login-form'
 import { useAuth } from '@/components/auth-provider'
+import Link from 'next/link'
 
 interface StatusData {
   agents: Record<string, AgentSnapshot>
@@ -143,7 +144,7 @@ export default function Home() {
     )
   }
 
-  const agentOrder: AgentId[] = ['noah', 'dora', 'kai']
+  const agentOrder: AgentId[] = ['noah', 'dora', 'kai', 'quinn']
 
   return (
     <main className="min-h-screen p-6 max-w-7xl mx-auto">
@@ -157,6 +158,13 @@ export default function Home() {
           </div>
         </div>
         <div className="flex items-center gap-4">
+          <Link
+            href="/brain"
+            className="flex items-center gap-2 px-3 py-1.5 text-sm bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg transition-colors"
+          >
+            <span>🧠</span>
+            Second Brain
+          </Link>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
             <span className="text-xs text-zinc-500">Live</span>
@@ -186,7 +194,7 @@ export default function Home() {
       </div>
 
       {/* Agent Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 mb-6">
         {agentOrder.map(agent => (
           <AgentCard
             key={agent}
