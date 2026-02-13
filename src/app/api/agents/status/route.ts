@@ -6,6 +6,7 @@ const AGENT_MAP: Record<string, string> = {
   'agent:main:main': 'noah',
   'agent:kai:main': 'kai',
   'agent:dora:main': 'dora',
+  'agent:qa:main': 'quinn',
 }
 
 // GET /api/agents/status — proxy to OpenClaw sessions API (token never exposed to client)

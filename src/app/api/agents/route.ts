@@ -5,6 +5,7 @@ const AGENT_SESSION_MAP: Record<string, string> = {
   noah: 'agent:main:main',
   kai: 'agent:kai:main',
   dora: 'agent:dora:main',
+  quinn: 'agent:qa:main',
 }
 
 function checkAuth(req: NextRequest) {

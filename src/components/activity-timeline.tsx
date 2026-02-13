@@ -186,7 +186,7 @@ export function ActivityTimeline() {
             onChange={e => setFilterAgent(e.target.value as AgentId | 'all')}
             className="bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-1 focus:ring-zinc-600"
           >
-            {(['all', 'noah', 'dora', 'kai'] as const).map(id => (
+            {(['all', 'noah', 'dora', 'kai', 'quinn'] as const).map(id => (
               <option key={id} value={id}>
                 {id === 'all' ? '👥 Todos' : `${AGENTS[id].emoji} ${AGENTS[id].name}`}
               </option>

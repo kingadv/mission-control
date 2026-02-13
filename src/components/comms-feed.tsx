@@ -20,15 +20,17 @@ const MAX_CHARS = 500
 const MAX_LINES = 6
 
 const BUBBLE_COLORS: Record<string, { bg: string; border: string; tail: string }> = {
-  noah:  { bg: 'bg-purple-600/30', border: 'border-purple-500/40', tail: 'text-purple-500/40' },
-  kai:   { bg: 'bg-cyan-600/25',   border: 'border-cyan-500/40',   tail: 'text-cyan-500/40' },
-  dora:  { bg: 'bg-blue-600/25',   border: 'border-blue-500/40',   tail: 'text-blue-500/40' },
+  noah:  { bg: 'bg-purple-600/30',  border: 'border-purple-500/40',  tail: 'text-purple-500/40' },
+  kai:   { bg: 'bg-cyan-600/25',    border: 'border-cyan-500/40',    tail: 'text-cyan-500/40' },
+  dora:  { bg: 'bg-blue-600/25',    border: 'border-blue-500/40',    tail: 'text-blue-500/40' },
+  quinn: { bg: 'bg-emerald-600/25', border: 'border-emerald-500/40', tail: 'text-emerald-500/40' },
 }
 
 const SIDES: Record<string, 'left' | 'right'> = {
   noah: 'left',
   kai: 'right',
   dora: 'left',
+  quinn: 'right',
 }
 
 function CommBubble({ comm }: { comm: AgentComm }) {

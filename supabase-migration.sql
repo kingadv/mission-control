@@ -3,7 +3,7 @@
 
 CREATE TABLE IF NOT EXISTS agent_activities (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
-  agent text NOT NULL CHECK (agent IN ('noah', 'kai', 'dora')),
+  agent text NOT NULL CHECK (agent IN ('noah', 'kai', 'dora', 'quinn')),
   activity_type text NOT NULL CHECK (activity_type IN ('deploy', 'research', 'bugfix', 'communication', 'edit', 'task_complete', 'task_start', 'git_commit', 'error', 'system')),
   summary text NOT NULL,
   detail text,

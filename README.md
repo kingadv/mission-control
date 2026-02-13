@@ -58,8 +58,9 @@ POST /api/agents/kill         — Request agent stop (Supabase Auth or API key)
 | Agent | Role | Session Key | Emoji |
 |-------|------|-------------|-------|
 | Noah | Orchestrator | agent:main:main | 🧠 |
-| Dora | Researcher | agent:researcher:main | 🔍 |
+| Dora | Researcher | agent:dora:main | 🔍 |
 | Kai | Engineer | agent:kai:main | ⚡ |
+| Quinn | QA | agent:qa:main | 🧪 |
 
 ## Database Tables
 
