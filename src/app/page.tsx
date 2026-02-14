@@ -158,13 +158,6 @@ export default function Home() {
           </div>
         </div>
         <div className="flex items-center gap-4">
-          <Link
-            href="/brain"
-            className="flex items-center gap-2 px-3 py-1.5 text-sm bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 rounded-lg transition-colors"
-          >
-            <span>🧠</span>
-            Second Brain
-          </Link>
           <div className="flex items-center gap-2">
             <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
             <span className="text-xs text-zinc-500">Live</span>
