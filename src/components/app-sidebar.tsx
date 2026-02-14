@@ -7,6 +7,7 @@ import { useState } from 'react'
 const navItems = [
   { href: '/', label: 'Home', icon: '🏠', exact: true },
   { href: '/brain', label: 'Second Brain', icon: '🧠' },
+  { href: '/antfarm', label: 'Antfarm', icon: '🐜' },
 ]
 
 const comingSoonItems = [
