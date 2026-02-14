@@ -68,6 +68,35 @@ POST /api/agents/kill         — Request agent stop (Supabase Auth or API key)
 - `agent_events` — Activity log (tool calls, errors, alerts, kills, snapshots)
 - `agent_comms` — Inter-agent message history
 
+## QA Visual
+
+Playwright-powered visual testing suite for smoke tests across desktop and mobile viewports.
+
+### Setup
+```bash
+npm install -D @playwright/test
+npx playwright install chromium --with-deps
+```
+
+### Tests
+- **Home Page Loading** — Verifies mission control loads correctly
+- **Desktop Sidebar** — Checks sidebar visibility and navigation on desktop
+- **Mobile Navigation** — Tests hamburger menu and mobile interactions
+- **Page Navigation** — Tests routing between Home and Second Brain
+- **Console Error Detection** — Monitors for JavaScript errors
+
+### Running Tests
+```bash
+npm run test:visual              # Headless testing
+npm run test:visual:headed       # Browser UI testing
+```
+
+### Configuration
+- **Desktop:** 1280x720 viewport
+- **Mobile:** 390x844 viewport (Pixel 5-like)
+- **Screenshots:** Saved to `screenshots/` for visual baselines
+- **Test Results:** Generated in `test-results/`
+
 ## Deploy
 
 ```bash
