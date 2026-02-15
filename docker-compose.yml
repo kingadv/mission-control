@@ -1,0 +1,43 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: mc-postgres
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:5433:5432"
+    environment:
+      POSTGRES_DB: board
+      POSTGRES_USER: board_admin
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U board_admin -d board"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: mc-app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:3001:3001"
+    environment:
+      DATABASE_URL: postgresql://board_admin:${POSTGRES_PASSWORD}@postgres:5432/board
+      NODE_ENV: production
+      PORT: 3001
+      OPENCLAW_API_TOKEN: ${OPENCLAW_API_TOKEN}
+      OPENCLAW_API_URL: ${OPENCLAW_API_URL}
+      SB_DATA_URL: ${SB_DATA_URL}
+      SB_DATA_KEY: ${SB_DATA_KEY}
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
