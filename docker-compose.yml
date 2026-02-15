@@ -33,6 +33,8 @@ services:
       OPENCLAW_API_URL: ${OPENCLAW_API_URL}
       SB_DATA_URL: ${SB_DATA_URL}
       SB_DATA_KEY: ${SB_DATA_KEY}
+    volumes:
+      - /home/ubuntu/.openclaw:/home/ubuntu/.openclaw:ro
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
